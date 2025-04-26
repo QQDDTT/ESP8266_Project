@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>ESP8266 Command Center</title>
+    <style>
+        body {
+            background-color: #121212;
+            color: #e0e0e0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            margin: 0;
+        }
+
+        h1 {
+            margin-bottom: 20px;
+        }
+
+        .input-group {
+            margin-bottom: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        input[type="text"] {
+            background-color: #1f1f1f;
+            color: #e0e0e0;
+            border: 2px solid #333;
+            border-radius: 8px;
+            padding: 10px;
+            font-size: 16px;
+            width: 250px;
+            text-align: center;
+        }
+
+        .button {
+            background-color: #1f1f1f;
+            color: #e0e0e0;
+            border: 2px solid #333;
+            padding: 12px 24px;
+            margin: 8px;
+            font-size: 18px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background-color 0.3s, border-color 0.3s;
+        }
+
+        .button:hover {
+            background-color: #333;
+            border-color: #555;
+        }
+
+        .status {
+            margin-top: 20px;
+            font-size: 16px;
+            color: #888;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>ESP8266 控制面板</h1>
+
+    <div class="input-group">
+        <label for="ip">目标 IP 地址：</label>
+        <input type="text" id="ip">
+    </div>
+
+    <button class="button" onclick="sendCommand('led_on')">开灯</button>
+    <button class="button" onclick="sendCommand('led_off')">关灯</button>
+    <button class="button" onclick="sendCommand('restart')">重启</button>
+
+    <div class="status" id="status">等待操作...</div>
+
+    <script>
+        function sendCommand(command) {
+            const status = document.getElementById('status');
+            const ip = document.getElementById('ip').value.trim();
+
+            if (!ip) {
+                status.textContent = '请先输入目标 IP 地址！';
+                return;
+            }
+
+            status.textContent = '发送中...';
+
+            fetch(`http://${ip}/command?name=${command}`)
+                .then(response => response.text())
+                .then(text => {
+                    status.textContent = '成功：' + text;
+                })
+                .catch(err => {
+                    status.textContent = '错误：' + err;
+                });
+        }
+    </script>
+
+</body>
+</html>

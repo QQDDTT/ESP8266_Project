@@ -129,7 +129,7 @@
         }
 
         function fetchData(ip) {
-            const url = `http://${ip}/`; // 假设API在端口80，如果有其他端口，可以根据需要修改
+            const url = `http://${ip}/status`; // 假设API在端口80，如果有其他端口，可以根据需要修改
 
             fetch(url)
                 .then(response => {

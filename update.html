@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>ESP8266 Firmware Update</title>
+    <style>
+        body {
+            background-color: #121212;
+            color: #e0e0e0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            margin: 0;
+        }
+        h1 {
+            margin-bottom: 20px;
+            font-size: 2em;
+            color: #03dac6;
+        }
+        form {
+            background: #1e1e1e;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 0 10px rgba(3, 218, 198, 0.5);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        input[type="file"] {
+            margin-bottom: 20px;
+            color: #e0e0e0;
+        }
+        input[type="submit"] {
+            background-color: #03dac6;
+            color: #121212;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1em;
+            transition: background-color 0.3s ease;
+        }
+        input[type="submit"]:hover {
+            background-color: #018786;
+        }
+        #status {
+            margin-top: 20px;
+            font-size: 1em;
+            color: #ff9800;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>Firmware Update</h1>
+    <form id="updateForm" method="POST" action="/update" enctype="multipart/form-data">
+        <input type="file" name="firmware" required accept=".bin">
+        <input type="submit" value="Upload">
+    </form>
+
+    <div id="status"></div>
+
+    <script>
+        const form = document.getElementById('updateForm');
+        const statusDiv = document.getElementById('status');
+
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const formData = new FormData(form);
+            try {
+                const response = await fetch('/update', {
+                    method: 'POST',
+                    body: formData
+                });
+                if (response.ok) {
+                    statusDiv.textContent = 'Upload successful! Rebooting...';
+                } else {
+                    statusDiv.textContent = 'Upload failed. Please try again.';
+                }
+            } catch (error) {
+                statusDiv.textContent = 'Network error. Please check connection.';
+            }
+        });
+    </script>
+
+</body>
+</html>
