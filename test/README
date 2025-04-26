@@ -1,0 +1,28 @@
+
+This directory is intended for PlatformIO Test Runner and project tests.
+
+Unit Testing is a software testing method by which individual units of
+source code, sets of one or more MCU program modules together with associated
+control data, usage procedures, and operating procedures, are tested to
+determine whether they are fit for use. Unit testing finds problems early
+in the development cycle.
+
+More information about PlatformIO Unit Testing:
+- https://docs.platformio.org/en/latest/advanced/unit-testing/index.html
+
+ESP 8266
+引脚名称	GPIO编号	说明
+A0	A0	模拟输入（0-1.0V）
+D0	GPIO16	通用数字IO
+D1	GPIO5	通用数字IO
+D2	GPIO4	通用数字IO
+D3	GPIO0	上电拉高，BOOT相关
+D4	GPIO2	上电拉高，BOOT相关
+D5	GPIO14	通用数字IO / SPI CLK
+D6	GPIO12	通用数字IO / SPI MISO
+D7	GPIO13	通用数字IO / SPI MOSI
+D8	GPIO15	上电拉低，BOOT相关
+SD2	GPIO9	Flash数据线（默认禁用）
+SD3	GPIO10	Flash数据线（默认禁用）
+RSV	未分配	保留，内部用途
+CMD	未分配	保留，内部用途

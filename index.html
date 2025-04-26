@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ESP8266 数据监控</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #121212;
+            color: #ffffff;
+        }
+        h1 {
+            text-align: center;
+            color: #ffffff;
+        }
+        #status {
+            color: #cccccc;
+            text-align: center;
+            margin-top: 20px;
+        }
+        #data {
+            color: #cccccc;
+            margin: 20px;
+        }
+        canvas {
+            margin: 20px;
+            background-color: #333333;
+        }
+    </style>
+</head>
+<body>
+    <h1>ESP8266 数据监控</h1>
+
+    <div>
+        <label for="ip" style="color: #ffffff;">请输入 IP 地址：</label>
+        <input type="text" id="ip" placeholder="输入设备 IP 地址" style="padding: 5px;">
+        <button onclick="startMonitoring()">开始监控</button>
+    </div>
+
+    <div id="status"></div>
+    <pre id="data"></pre>
+
+    <canvas id="gpioChart" width="400" height="200"></canvas>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        const allPins = [
+            "D0", "D1", "D2", "D3", "D4", "D5", "D9", "D10", "D11", "D12", "D13", "D14", "D15", "D16", 
+            "A0", "SD2(GPIO9)", "SD3(GPIO10)", "RSV", "CMD"
+        ];
+
+        let intervalId = null;
+        const dataElement = document.getElementById('data');
+        const statusElement = document.getElementById('status');
+        const ctx = document.getElementById('gpioChart').getContext('2d');
+
+        // 存储 GPIO 历史数据
+        let gpioHistory = {};
+
+        // 初始化 Chart.js
+        const chart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: [], // 时间标签
+                datasets: allPins.map(pin => ({
+                    label: pin,
+                    data: [],
+                    borderColor: getRandomColor(),
+                    fill: false,
+                    tension: 0.3,
+                    borderWidth: 2,
+                    hidden: false // 默认显示
+                }))
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: {
+                        position: 'top',
+                    },
+                    tooltip: {
+                        mode: 'index',
+                        intersect: false,
+                    },
+                },
+                interaction: {
+                    mode: 'index',
+                    intersect: false
+                },
+                scales: {
+                    x: {
+                        type: 'linear',
+                        position: 'bottom'
+                    }
+                }
+            }
+        });
+
+        function getRandomColor() {
+            const letters = '0123456789ABCDEF';
+            let color = '#';
+            for (let i = 0; i < 6; i++) {
+                color += letters[Math.floor(Math.random() * 16)];
+            }
+            return color;
+        }
+
+        function startMonitoring() {
+            const ip = document.getElementById('ip').value.trim();
+            if (!ip) {
+                alert('请输入IP地址');
+                return;
+            }
+
+            // 显示“正在加载”的状态
+            statusElement.textContent = '正在连接到设备...';
+            dataElement.textContent = '';
+
+            // 清除之前的定时器
+            if (intervalId) {
+                clearInterval(intervalId);
+            }
+
+            // 定时请求数据
+            intervalId = setInterval(() => {
+                fetchData(ip);
+            }, 1000); // 每秒请求一次
+        }
+
+        function fetchData(ip) {
+            const url = `http://${ip}/`; // 假设API在端口80，如果有其他端口，可以根据需要修改
+
+            fetch(url)
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error(`HTTP 错误: ${response.status}`);
+                    }
+                    return response.json();
+                })
+                .then(json => {
+                    statusElement.textContent = '数据已成功获取';
+                    dataElement.textContent = JSON.stringify(json, null, 2);
+
+                    // 更新所有 GPIO 数据
+                    const currentTime = Date.now();
+                    allPins.forEach(pin => {
+                        if (!gpioHistory[pin]) gpioHistory[pin] = [];
+                        gpioHistory[pin].push(json.gpio.includes(pin) ? 1 : 0); // 假设 json.gpio 中包含了每个 GPIO 的状态
+
+                        if (gpioHistory[pin].length > 30) {
+                            gpioHistory[pin].shift(); // 限制最大数据点数为 30
+                        }
+                    });
+
+                    // 更新图表数据
+                    chart.data.labels.push(currentTime); // 推入时间戳
+                    if (chart.data.labels.length > 30) {
+                        chart.data.labels.shift(); // 限制时间戳最大数量为 30
+                    }
+
+                    // 更新每个 dataset 的数据
+                    chart.data.datasets.forEach(dataset => {
+                        const pin = dataset.label;
+                        dataset.data = gpioHistory[pin];
+                    });
+
+                    // 更新图表显示
+                    chart.update();
+                })
+                .catch(err => {
+                    statusElement.textContent = '获取数据失败: ' + err.message;
+                    dataElement.textContent = ''; // 清空数据区域
+                });
+        }
+    </script>
+</body>
+</html>
